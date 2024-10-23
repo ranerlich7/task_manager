@@ -2,11 +2,14 @@
 
 ## Setup environment
 
-1. **Create and activate a virtual environment:**
+1.** Fork and clone the project **
+    - fork in gitgub
+    - git clone [url from github]
+2. **Create and activate a virtual environment:**
     - python -m venv venv
     - source venv\Scripts\activate
     - pip install -r requirements.txt
-2. Create the database and superuser
+3. Create the database and superuser
     - python manage.py migrate
     - python manage.py createsuperuser
 
