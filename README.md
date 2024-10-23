@@ -4,7 +4,9 @@
 
 1.** Fork and clone the project **
     - fork in gitgub
+    
     - git clone [url from github]
+    
 2. **Create and activate a virtual environment:**
     - python -m venv venv
     - source venv\Scripts\activate
