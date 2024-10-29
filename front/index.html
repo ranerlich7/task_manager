@@ -14,42 +14,69 @@
     </div>
 
     <script>
-        async function fetchTasks() {
-            try {
-                let authToken = localStorage.getItem('authToken')
-                const response = await axios.get('http://127.0.0.1:8000/',
-                    {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}` // Include the token in headers
-                    }
-                    }); 
-                const tasks = response.data;
-                const taskListDiv = document.getElementById('task-list');
-                taskListDiv.innerHTML = ''; // Clear existing content
+async function fetchTasks() {
+    const authToken = localStorage.getItem('authToken'); // Retrieve the access JWT
+    const refreshToken = localStorage.getItem('refreshToken'); // Retrieve the refresh JWT
 
-                if (tasks.length === 0) {
-                    taskListDiv.innerHTML = '<p class="text-center">No tasks available.</p>';
-                } else {
-                    const ul = document.createElement('ul');
-                    ul.className = 'list-group';
-                    
-                    tasks.forEach(task => {
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                        li.textContent = `${task.name} (Deadline: ${task.deadline})`;
-                        if (task.done) {
-                            li.classList.add('list-group-item-success'); // Bootstrap success class for done tasks
-                        }
-                        ul.appendChild(li);
-                    });
-                    
-                    taskListDiv.appendChild(ul);
-                }
-            } catch (error) {
-                console.error('Error fetching tasks:', error);
-                document.getElementById('task-list').innerHTML = '<p class="text-danger">Error fetching tasks. Please try again later.</p>';
+    if (!authToken) {
+        document.getElementById('task-list').innerHTML = '<p class="text-danger">You need to log in to view tasks.</p>';
+        window.location.href = 'login.html'; // Redirect to the login page
+        return
+    }
+
+    try {
+        const response = await axios.get('http://localhost:8000/', {
+            headers: {
+                'Authorization': `Bearer ${authToken}` // Use 'Bearer' for access JWT
             }
+        });
+        const tasks = response.data;
+        const taskListDiv = document.getElementById('task-list');
+        taskListDiv.innerHTML = ''; // Clear existing content
+
+        if (tasks.length === 0) {
+            taskListDiv.innerHTML = '<p class="text-center">No tasks available.</p>';
+        } else {
+            const ul = document.createElement('ul');
+            ul.className = 'list-group';
+
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.textContent = `${task.name} (Deadline: ${task.deadline})`;
+                if (task.done) {
+                    li.classList.add('list-group-item-success'); // Bootstrap success class for done tasks
+                }
+                ul.appendChild(li);
+            });
+
+            taskListDiv.appendChild(ul);
         }
+    } catch (error) {
+        console.error('Error fetching tasks:', error);
+        if (error.response && error.response.status === 401) {
+            // Attempt to refresh the token if unauthorized
+            try {
+                const refreshResponse = await axios.post('http://localhost:8000/refresh/', {
+                    refresh: refreshToken // Send the refresh token
+                });
+
+                const newAuthToken = refreshResponse.data.access; // Get the new access token
+                localStorage.setItem('authToken', newAuthToken); // Update the access token in storage
+
+                // Retry fetching tasks with the new token
+                return fetchTasks(); // Recursively call fetchTasks to try again
+            } catch (refreshError) {
+                console.error('Error refreshing token:', refreshError);
+                localStorage.removeItem('authToken'); // Clear the invalid access token
+                localStorage.removeItem('refreshToken'); // Clear the refresh token
+                window.location.href = 'login.html'; // Redirect to the login page
+            }
+        } else {
+            document.getElementById('task-list').innerHTML = '<p class="text-danger">Error fetching tasks. Please try again later.</p>';
+        }
+    }
+}
 
         // Fetch tasks when the page loads
         window.onload = fetchTasks;

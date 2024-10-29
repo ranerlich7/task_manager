@@ -9,8 +9,8 @@ from users.models import TaskUser
 @permission_classes([IsAuthenticated])
 def get_all_tasks(request):
     print("logged in user is:",request.user) #request.user = logged in user
-    # tasks = Task.objects.filter(user=request.user)
-    tasks = Task.objects.all()
+    tasks = Task.objects.filter(user=request.user)
+    # tasks = Task.objects.all()
     serializer = TaskSerializer(tasks, many=True)
     return Response(serializer.data)
 
