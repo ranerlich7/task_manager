@@ -6,7 +6,7 @@ from .serializers import TaskSerializer
 from users.models import TaskUser
 
 @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def get_all_tasks(request):
     print("logged in user is:",request.user) #request.user = logged in user
     # tasks = Task.objects.filter(user=request.user)
